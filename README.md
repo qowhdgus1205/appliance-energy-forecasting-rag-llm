@@ -15,7 +15,7 @@ This project demonstrates an end-to-end workflow for operational energy analytic
 - Retrieve supporting context from synthetic operator manuals and incident summaries
 - Generate concise operator-facing answers with an LLM API
 
-The main model is a shared multi-output `ExtraTreesRegressor`. The RAG layer uses a local TF-IDF retriever wrapped by LangChain/LangGraph, and the saved demo answers were generated with `gpt-5.4-mini`.
+The main model is a compact Temporal Convolutional Network (TCN). The RAG layer uses a local TF-IDF retriever wrapped by LangChain/LangGraph, and the saved demo answers were generated with `gpt-5.4-mini`.
 
 ## Table of Contents
 
@@ -32,13 +32,13 @@ The main model is a shared multi-output `ExtraTreesRegressor`. The RAG layer use
 
 Forecast target: `inst_heat`
 
-Model: shared multi-output `ExtraTreesRegressor`
+Model: compact Temporal Convolutional Network (TCN)
 
 | split | MAE | RMSE | R2 | MAPE |
 | --- | ---: | ---: | ---: | ---: |
-| train | 141.2832 | 296.8979 | 0.9717 | 0.0732 |
-| val | 561.6593 | 1089.3591 | 0.7684 | 0.2750 |
-| test | 778.9775 | 1433.0679 | 0.7261 | 0.2598 |
+| train | 747.3132 | 1314.0419 | 0.4452 | 0.2822 |
+| val | 1020.9877 | 1686.0577 | 0.4451 | 0.4282 |
+| test | 1246.0864 | 2043.1516 | 0.4434 | 0.3723 |
 
 Additional artifacts:
 
@@ -108,7 +108,7 @@ scripts/
   19_build_facility_a_mode_rag_corpus.py
   20_build_facility_a_mode_tfidf_index.py
   24_generate_dummy_engineer_prompt_suite.py
-  25_train_facility_a_inst_heat_multioutput.py
+  25_train_facility_a_inst_heat_tcn.py
   26_run_dummy_engineer_openai_api.py
 
 src/power_forecast_rag/
@@ -133,6 +133,7 @@ Core Python packages:
 - `langgraph`
 - `pydantic`
 - `openai`
+- `torch`
 
 The full package list is in [requirements.txt](requirements.txt).
 
