@@ -42,6 +42,12 @@ Best historical TCN checkpoint experiment:
 
 The point-wise MAPE in this dataset is unstable because the target can be near zero. For that reason, the project emphasizes energy-area and aggregate-window errors for operational interpretation.
 
+### Prediction Trend Example
+
+The plot below shows a representative holdout segment from the TCN prediction artifact. It compares actual `inst_heat` against the model prediction over the same sample range.
+
+![TCN prediction vs actual inst_heat trend](assets/tcn_inst_heat_prediction_trend.png)
+
 Additional artifacts:
 
 - [Forecast summary](outputs/reports/facility_a_inst_heat_multioutput_summary.md)
