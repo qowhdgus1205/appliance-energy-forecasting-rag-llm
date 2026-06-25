@@ -8,7 +8,7 @@ Raw data, API keys, trained model binaries, and proprietary identifiers are inte
 
 This project demonstrates an end-to-end workflow for operational energy analytics:
 
-- Forecast `inst_heat` over a 15-step future window (`t+1..t+15`)
+- Forecast short-horizon `inst_heat` demand from appliance sensor features
 - Use forecast residuals to flag abnormal operating windows
 - Interpret residuals separately for gas-like and heating-like operating modes
 - Estimate relative operating cost from the summed 15-step forecast
@@ -32,8 +32,6 @@ The main model is a shared multi-output `ExtraTreesRegressor`. The RAG layer use
 
 Forecast target: `inst_heat`
 
-Forecast window: `t+1..t+15`
-
 Model: shared multi-output `ExtraTreesRegressor`
 
 | split | MAE | RMSE | R2 | MAPE |
@@ -48,6 +46,7 @@ Additional artifacts:
 - [Gas-like RAG context](outputs/reports/facility_a_gas_like_rag_context.md)
 - [Heating-like RAG context](outputs/reports/facility_a_heating_like_rag_context.md)
 - [API answer run summary](outputs/rag/dummy_engineer_api_runs/20260625_150159/summary.md)
+- RAG manual corpus: 10 synthetic operator, diagnostic, sensor, mode, and alarm documents
 
 ## Example Questions and Answers
 
@@ -93,7 +92,8 @@ Full answer: [heat_alarm_code_06_answer.md](outputs/rag/dummy_engineer_api_runs/
 
 ```text
 docs/
-  manuals/                  Synthetic operator manuals used by RAG
+  manuals/                  Synthetic but realistic operator manuals used by RAG
+                            Includes sensor, compressor, valve, mode, alarm, cost, and inspection guides
   knowledge/                Mode-awareness and operating notes
   portfolio_demo_questions.md
 

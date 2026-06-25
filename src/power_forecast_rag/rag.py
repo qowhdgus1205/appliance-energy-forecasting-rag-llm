@@ -58,15 +58,11 @@ def build_lg_chunks(project_root: Path) -> list[dict[str, object]]:
     sources = [
         project_root / "docs" / "knowledge" / "inst_heat_operating_notes.md",
         project_root / "docs" / "knowledge" / "mode_awareness_notes.md",
-        project_root / "docs" / "manuals" / "facility_a_operator_quickstart.md",
-        project_root / "docs" / "manuals" / "facility_a_mode_faq.md",
-        project_root / "docs" / "manuals" / "facility_a_alarm_code_guide.md",
-        project_root / "docs" / "manuals" / "facility_a_inspection_runbook.md",
-        project_root / "docs" / "manuals" / "facility_a_cost_comparison_guide.md",
         project_root / "outputs" / "reports" / "facility_a_inst_heat_rag_context.md",
         project_root / "outputs" / "reports" / "facility_a_inst_heat_exogenous_predictions_root_cause.md",
         project_root / "outputs" / "reports" / "facility_a_inst_heat_exogenous_incident.md",
     ]
+    sources.extend(sorted((project_root / "docs" / "manuals").glob("*.md")))
     chunks: list[dict[str, object]] = []
 
     for src in sources:
