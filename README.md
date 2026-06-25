@@ -15,7 +15,7 @@ This project demonstrates an end-to-end workflow for operational energy analytic
 - Retrieve supporting context from synthetic operator manuals and incident summaries
 - Generate concise operator-facing answers with an LLM API
 
-The main model is a Temporal Convolutional Network (TCN). The RAG layer uses a local TF-IDF retriever wrapped by LangChain/LangGraph, and the saved demo answers were generated with `gpt-5.4-mini`.
+The main model is a Temporal Convolutional Network (TCN). The saved demo answers use a local TF-IDF retriever wrapped by LangChain/LangGraph, and the repository also includes an optional OpenAI embedding retriever for semantic search. The saved demo answers were generated with `gpt-5.4-mini`.
 
 ## Table of Contents
 
@@ -225,6 +225,12 @@ python scripts/28_query_facility_a_mode_embedding_rag.py \
   --query "heating mode forecast is drifting and alarm patterns repeat"
 ```
 
+Generate an embedding-backed prompt suite:
+
+```bash
+python scripts/24_generate_dummy_engineer_prompt_suite.py --retriever embedding
+```
+
 By default this uses `text-embedding-3-small`. Set `OPENAI_EMBEDDING_MODEL` or pass `--model` to use another embedding model. The generated embedding index is stored under `outputs/rag/facility_a_mode_embedding_index/` and excluded from Git.
 
 ## Run the LLM Answer Workflow
@@ -240,6 +246,8 @@ Run all prepared engineer questions:
 ```bash
 python scripts/26_run_dummy_engineer_openai_api.py --model gpt-5.4-mini
 ```
+
+If you regenerated the prompt suite with `--retriever embedding`, this command uses those embedding-backed prompts from the manifest.
 
 Run one question only:
 
