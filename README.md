@@ -1,31 +1,32 @@
 # Appliance Energy Forecasting with RAG and LLM
 
-An industrial appliance time-series project that forecasts short-horizon power/heat demand, detects abnormal forecast residuals, retrieves operational context with RAG, and generates engineer-facing answers with an OpenAI GPT model.
+An anonymized industrial appliance time-series project that forecasts short-horizon power/heat demand, detects abnormal forecast residuals, retrieves operational context with RAG, and generates engineer-facing answers with an OpenAI GPT model.
 
-The project is intentionally anonymized for public portfolio use. Raw data, API keys, trained model binaries, and proprietary identifiers are not included.
+Raw data, API keys, trained model binaries, and proprietary identifiers are intentionally excluded from this public repository.
 
-## What This Project Shows
+## Overview
 
-- Multi-step time-series forecasting for `inst_heat` over `t+1..t+15`
-- Residual-based anomaly detection on forecast windows
-- Mode-aware interpretation for gas-like and heating-like operating states
-- Cost comparison using summed 15-step forecasts and assumed energy rates
-- TF-IDF RAG over synthetic operator manuals and incident summaries
-- LLM answer generation using `gpt-5.4-mini`
-- Reproducible prompt, answer, and trace artifacts for portfolio review
+This project demonstrates an end-to-end workflow for operational energy analytics:
 
-## Architecture
+- Forecast `inst_heat` over a 15-step future window (`t+1..t+15`)
+- Use forecast residuals to flag abnormal operating windows
+- Interpret residuals separately for gas-like and heating-like operating modes
+- Estimate relative operating cost from the summed 15-step forecast
+- Retrieve supporting context from synthetic operator manuals and incident summaries
+- Generate concise operator-facing answers with an LLM API
 
-```text
-processed sensor table
-  -> feature pruning
-  -> multi-output forecast model
-  -> residual/anomaly summaries
-  -> mode-aware incident context
-  -> RAG corpus + TF-IDF retriever
-  -> LangChain/LangGraph prompt workflow
-  -> OpenAI API answer records
-```
+The main model is a shared multi-output `ExtraTreesRegressor`. The RAG layer uses a local TF-IDF retriever wrapped by LangChain/LangGraph, and the saved demo answers were generated with `gpt-5.4-mini`.
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Key Results](#key-results)
+- [Example Questions and Answers](#example-questions-and-answers)
+- [Repository Layout](#repository-layout)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Run the LLM Answer Workflow](#run-the-llm-answer-workflow)
+- [Notes](#notes)
 
 ## Key Results
 
@@ -33,7 +34,7 @@ Forecast target: `inst_heat`
 
 Forecast window: `t+1..t+15`
 
-Model: `ExtraTreesRegressor` shared multi-output model
+Model: shared multi-output `ExtraTreesRegressor`
 
 | split | MAE | RMSE | R2 | MAPE |
 | --- | ---: | ---: | ---: | ---: |
@@ -41,66 +42,159 @@ Model: `ExtraTreesRegressor` shared multi-output model
 | val | 561.6593 | 1089.3591 | 0.7684 | 0.2750 |
 | test | 778.9775 | 1433.0679 | 0.7261 | 0.2598 |
 
-See [forecast summary](outputs/reports/facility_a_inst_heat_multioutput_summary.md).
+Additional artifacts:
 
-## RAG and LLM Demo
+- [Forecast summary](outputs/reports/facility_a_inst_heat_multioutput_summary.md)
+- [Gas-like RAG context](outputs/reports/facility_a_gas_like_rag_context.md)
+- [Heating-like RAG context](outputs/reports/facility_a_heating_like_rag_context.md)
+- [API answer run summary](outputs/rag/dummy_engineer_api_runs/20260625_150159/summary.md)
 
-The demo uses synthetic manuals and generated incident records to answer realistic engineer questions such as:
+## Example Questions and Answers
+
+The examples below are shortened from generated LLM answer records. Each answer cites retrieved context chunks in the full artifact.
+
+### 1. Cost increase with lower heat forecast
+
+**Question**
 
 > The next 15-step `inst_heat` forecast is lower than expected, but the operating cost estimate is rising. What should I inspect first?
 
-Generated API answers are stored under:
+**Answer summary**
 
-```text
-outputs/rag/dummy_engineer_api_runs/20260625_150159/
-```
+The model should compare the 15-step forecast sum with the operating-cost estimate before treating low heat as abnormal. In gas-like mode, low or zero `inst_heat` is not automatically anomalous. The first inspection targets are `3way_DHW`, `hotwater_th`, `inv1_input_current`, and compressor current/target frequency trends.
 
-Example answer:
+Full answer: [gas_cost_rise_01_answer.md](outputs/rag/dummy_engineer_api_runs/20260625_150159/gas_cost_rise_01_answer.md)
 
-- [gas_cost_rise_01_answer.md](outputs/rag/dummy_engineer_api_runs/20260625_150159/gas_cost_rise_01_answer.md)
+### 2. Near-zero heat in gas-like mode
+
+**Question**
+
+> In gas mode, `inst_heat` is almost zero. Can this be normal, and where should I check first?
+
+**Answer summary**
+
+Near-zero `inst_heat` can be normal in gas-like mode, so the answer first checks whether `opermode=1` is consistent with the expected operating state. Because the residual window is still large, the recommended next checks are mode consistency, `3way_DHW`, `hotwater_th`, inverter input current, compressor current frequency, and target frequency.
+
+Full answer: [gas_zero_heat_02_answer.md](outputs/rag/dummy_engineer_api_runs/20260625_150159/gas_zero_heat_02_answer.md)
+
+### 3. Heating-mode drift with repeated alarm pattern
+
+**Question**
+
+> In heating mode, the forecast is drifting and alarm patterns repeat. Which manual section and field checks should I inspect first?
+
+**Answer summary**
+
+For heating-like mode, the answer prioritizes compressor load/current, target frequency, pressure stability, and temperature variation. The incident evidence points to a large 15-step residual and feature shifts around `vi_eev1`, inverter input current, compressor current frequency, and target frequency, so the first field checks focus on EEV/valve behavior and compressor frequency tracking.
+
+Full answer: [heat_alarm_code_06_answer.md](outputs/rag/dummy_engineer_api_runs/20260625_150159/heat_alarm_code_06_answer.md)
 
 ## Repository Layout
 
 ```text
 docs/
-  manuals/                  Synthetic operator manuals for RAG
+  manuals/                  Synthetic operator manuals used by RAG
   knowledge/                Mode-awareness and operating notes
   portfolio_demo_questions.md
 
+outputs/
+  reports/                  Public forecast and RAG context summaries
+  rag/                      Saved LLM answer examples
+
 scripts/
+  00_scan_energy_data.py
+  01_prune_energy_features.py
+  18_build_facility_a_mode_contexts.py
+  19_build_facility_a_mode_rag_corpus.py
+  20_build_facility_a_mode_tfidf_index.py
+  24_generate_dummy_engineer_prompt_suite.py
   25_train_facility_a_inst_heat_multioutput.py
   26_run_dummy_engineer_openai_api.py
 
 src/power_forecast_rag/
-  rag.py
-  mode_langchain_rag.py
+  rag.py                    TF-IDF index loading and search helpers
+  mode_langchain_rag.py     LangChain retriever and prompt formatting
   mode_langgraph_workflow.py
-
-outputs/
-  reports/                  Public summary artifacts
-  rag/                      Public LLM answer examples
 ```
+
+## Requirements
+
+Python 3.10+ is recommended.
+
+Core Python packages:
+
+- `pandas`
+- `numpy`
+- `scikit-learn`
+- `scipy`
+- `joblib`
+- `matplotlib`
+- `langchain-core`
+- `langgraph`
+- `pydantic`
+- `openai`
+
+The full package list is in [requirements.txt](requirements.txt).
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/qowhdgus1205/appliance-energy-forecasting-rag-llm.git
+cd appliance-energy-forecasting-rag-llm
+```
+
+Create and activate a virtual environment:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+Optional local package path for scripts:
+
+```bash
+export PYTHONPATH="$PWD/src:$PYTHONPATH"
+```
+
+Raw data and trained model binaries are not included. The repository is designed to show the anonymized workflow, public summaries, prompt artifacts, and generated LLM answer examples.
 
 ## Run the LLM Answer Workflow
 
-Set an API key through the environment or a local ignored file:
+Set an OpenAI API key through the environment:
 
 ```bash
 export OPENAI_API_KEY="sk-..."
+```
+
+Run all prepared engineer questions:
+
+```bash
 python scripts/26_run_dummy_engineer_openai_api.py --model gpt-5.4-mini
 ```
 
-To run one question only:
+Run one question only:
 
 ```bash
 python scripts/26_run_dummy_engineer_openai_api.py --question-id gas_cost_rise_01
 ```
 
-The script writes markdown answers and JSON traces into `outputs/rag/dummy_engineer_api_runs/<timestamp>/`.
+The script writes markdown answers and JSON traces into:
+
+```text
+outputs/rag/dummy_engineer_api_runs/<timestamp>/
+```
 
 ## Notes
 
 - The included manuals are synthetic and used only to demonstrate retrieval-grounded answering.
 - The cost comparison uses assumed rates, not real billing data.
-- Raw datasets and trained binary models are intentionally excluded from this public release.
 - Facility names and paths have been anonymized.
+- Raw datasets, model binaries, and API keys are excluded by design.
