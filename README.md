@@ -23,6 +23,7 @@ The main model is a Temporal Convolutional Network (TCN). The RAG layer uses a l
 - [Key Results](#key-results)
 - [RAG Knowledge Base](#rag-knowledge-base)
 - [Example Questions and Answers](#example-questions-and-answers)
+- [Engineering Notes](#engineering-notes)
 - [Repository Layout](#repository-layout)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -43,7 +44,7 @@ Best historical TCN checkpoint experiment:
 
 `energy-area rel. error` compares the total area under the predicted `inst_heat` curve with the total area under the actual curve over a representative holdout segment. It is used here because appliance energy operations care about accumulated consumption, and point-wise percentage error becomes unstable when the target is near zero.
 
-The point-wise MAPE in this dataset is unstable because the target can be near zero. For that reason, the project emphasizes energy-area and aggregate-window errors for operational interpretation.
+The point-wise MAPE in this dataset is unstable because the target can be near zero. For that reason, the project emphasizes energy-area relative error for operational interpretation.
 
 ### Prediction Trend Example
 
@@ -112,6 +113,14 @@ Full answer: [gas_zero_heat_02_answer.md](outputs/rag/dummy_engineer_api_runs/20
 For heating-like mode, the answer prioritizes compressor load/current, target frequency, pressure stability, and temperature variation. The incident evidence points to a large short-horizon residual and feature shifts around `vi_eev1`, inverter input current, compressor current frequency, and target frequency, so the first field checks focus on EEV/valve behavior and compressor frequency tracking.
 
 Full answer: [heat_alarm_code_06_answer.md](outputs/rag/dummy_engineer_api_runs/20260625_150159/heat_alarm_code_06_answer.md)
+
+## Engineering Notes
+
+These documents are useful for interview discussion and design review:
+
+- [Modeling decisions](docs/modeling_decisions.md)
+- [Retrieval evaluation](docs/retrieval_eval.md)
+- [Failure analysis](docs/failure_analysis.md)
 
 ## Repository Layout
 

@@ -2,7 +2,7 @@
   {
     "question_id": "gas_cost_rise_01",
     "mode": "gas_like",
-    "question": "As a facility_a engineer, the next 15-step inst_heat forecast is lower than expected but the operating cost estimate is rising. What should I inspect first?"
+    "question": "As a facility_a engineer, the short-horizon inst_heat forecast is lower than expected but the operating cost estimate is rising. What should I inspect first?"
   },
   {
     "question_id": "gas_zero_heat_02",
@@ -17,12 +17,12 @@
   {
     "question_id": "heat_residual_04",
     "mode": "heating_like",
-    "question": "In heating-like mode, the 15-step inst_heat forecast is too high compared with the measured trend. What inspection sequence should I follow?"
+    "question": "In heating-like mode, the short-horizon inst_heat forecast is too high compared with the measured trend. What inspection sequence should I follow?"
   },
   {
     "question_id": "heat_cost_compare_05",
     "mode": "heating_like",
-    "question": "For a heating-like episode, the predicted 15-step heat sum suggests a higher cost than the gas-like baseline. Can you summarize the cost comparison and likely checks?"
+    "question": "For a heating-like episode, the predicted short-horizon heat sum suggests a higher cost than the gas-like baseline. Can you summarize the cost comparison and likely checks?"
   },
   {
     "question_id": "heat_alarm_code_06",
