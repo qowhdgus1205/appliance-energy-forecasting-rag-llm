@@ -21,6 +21,7 @@ The main model is a Temporal Convolutional Network (TCN). The RAG layer uses a l
 
 - [Overview](#overview)
 - [Key Results](#key-results)
+- [RAG Knowledge Base](#rag-knowledge-base)
 - [Example Questions and Answers](#example-questions-and-answers)
 - [Repository Layout](#repository-layout)
 - [Requirements](#requirements)
@@ -40,6 +41,8 @@ Best historical TCN checkpoint experiment:
 | --- | ---: | ---: | ---: | ---: |
 | TCN | 10 | 10 | 22 | 0.0069 |
 
+`energy-area rel. error` compares the total area under the predicted `inst_heat` curve with the total area under the actual curve over a representative holdout segment. It is used here because appliance energy operations care about accumulated consumption, and point-wise percentage error becomes unstable when the target is near zero.
+
 The point-wise MAPE in this dataset is unstable because the target can be near zero. For that reason, the project emphasizes energy-area and aggregate-window errors for operational interpretation.
 
 ### Prediction Trend Example
@@ -56,6 +59,19 @@ Additional artifacts:
 - [Heating-like RAG context](outputs/reports/facility_a_heating_like_rag_context.md)
 - [API answer run summary](outputs/rag/dummy_engineer_api_runs/20260625_150159/summary.md)
 - RAG manual corpus: 10 synthetic operator, diagnostic, sensor, mode, and alarm documents
+
+## RAG Knowledge Base
+
+The retrieval corpus is intentionally small enough to inspect, but broad enough to show realistic grounding. It contains:
+
+| document group | examples | purpose |
+| --- | --- | --- |
+| Operator workflow | quickstart, inspection runbook | first-response inspection order |
+| Mode interpretation | mode FAQ, mode transition playbook | gas-like vs heating-like residual handling |
+| Equipment diagnostics | compressor diagnostics, valve and hot water control | current, frequency, valve, EEV, and hot water checks |
+| Sensor reference | sensor signal reference | feature-level explanations for retrieved evidence |
+| Alarm and cost guides | alarm triage matrix, cost comparison guide, alarm code guide | alarm-like patterns and operating-cost questions |
+| Forecast context | gas-like and heating-like RAG summaries | model evidence connected to operational language |
 
 ## Example Questions and Answers
 
