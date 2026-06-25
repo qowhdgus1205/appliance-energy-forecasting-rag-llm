@@ -2,44 +2,32 @@
 
 - target: `inst_heat`
 - model: `Temporal Convolutional Network (TCN)`
-- sequence_length: `16`
-- engineered lag/rolling features used: `False`
-- numeric features used: `76`
+- checkpoint type: historical best local experiment
+- input sequence length: `10`
+- output sequence length: `10`
+- numeric features used: `22`
 
-## Metrics
+## Validation
 
-| split | MAE | RMSE | R2 | MAPE | n_nonzero |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| train | 747.3132 | 1314.0419 | 0.4452 | 0.2822 | 612495 |
-| val | 1020.9877 | 1686.0577 | 0.4451 | 0.4282 | 113055 |
-| test | 1246.0864 | 2043.1516 | 0.4434 | 0.3723 | 109020 |
+- best validation loss: `2261.2222`
+- best epoch: `349`
 
-## Window totals
+## Facility A Test Metrics
 
-- test abs_error(sum over prediction window) 95th percentile: 51483.7969
-- predicted anomaly ratio on test: 0.0500
+| metric | value |
+| --- | ---: |
+| area per-window MAE | 470433.6563 |
+| aggregate window relative error | 0.0152 |
+| aggregate window bias | 205768704 |
+| segment AUC relative error | 0.0069 |
+| segment AUC true area | 1498576923 |
+| segment AUC predicted area | 1488211230 |
+| segment AUC difference | -10365693 |
 
-## Optional cost inputs
+## Metric Choice
 
-- electric_rate: 0.18
-- gas_rate: 0.07
+Point-wise MAPE is unstable for this dataset because near-zero target values can dominate percentage error. The operational analysis therefore emphasizes energy-area and aggregate-window errors.
 
-## Horizons by mean absolute residual
+## Public Release Note
 
-| horizon | test_mae | test_rmse | test_r2 | test_mape | mean_abs_residual |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | 599.1704 | 965.9092 | 0.8755 | 0.3223 | 599.1704 |
-| 2 | 526.2090 | 919.2415 | 0.8873 | 0.2436 | 526.2090 |
-| 3 | 687.4934 | 1205.9427 | 0.8060 | 0.2802 | 687.4934 |
-| 4 | 783.3066 | 1356.8676 | 0.7544 | 0.2642 | 783.3066 |
-| 5 | 1243.3734 | 1799.5011 | 0.5681 | 0.3725 | 1243.3734 |
-| 6 | 1010.6421 | 1750.4431 | 0.5913 | 0.3064 | 1010.6421 |
-| 7 | 1096.2656 | 1875.2823 | 0.5310 | 0.3087 | 1096.2656 |
-| 8 | 1356.0735 | 2110.5249 | 0.4060 | 0.3921 | 1356.0735 |
-| 9 | 1524.2833 | 2412.4287 | 0.2240 | 0.4377 | 1524.2833 |
-| 10 | 1417.1152 | 2238.8098 | 0.3317 | 0.4202 | 1417.1152 |
-| 11 | 1653.5957 | 2611.6194 | 0.0906 | 0.4418 | 1653.5957 |
-| 12 | 1614.0710 | 2403.2939 | 0.2300 | 0.4304 | 1614.0710 |
-| 13 | 1807.5114 | 2669.3259 | 0.0501 | 0.4884 | 1807.5114 |
-| 14 | 1685.5320 | 2517.1189 | 0.1554 | 0.4374 | 1685.5320 |
-| 15 | 1686.6565 | 2526.0164 | 0.1495 | 0.4396 | 1686.6565 |
+Raw data, preprocessing state, and trained checkpoint binaries are excluded from this repository. The included TCN training script is a compact reproducible demo, while this report summarizes the best historical local TCN experiment.

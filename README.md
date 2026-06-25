@@ -11,11 +11,11 @@ This project demonstrates an end-to-end workflow for operational energy analytic
 - Forecast short-horizon `inst_heat` demand from appliance sensor features
 - Use forecast residuals to flag abnormal operating windows
 - Interpret residuals separately for gas-like and heating-like operating modes
-- Estimate relative operating cost from the summed 15-step forecast
+- Estimate relative operating cost from the summed short-horizon forecast
 - Retrieve supporting context from synthetic operator manuals and incident summaries
 - Generate concise operator-facing answers with an LLM API
 
-The main model is a compact Temporal Convolutional Network (TCN). The RAG layer uses a local TF-IDF retriever wrapped by LangChain/LangGraph, and the saved demo answers were generated with `gpt-5.4-mini`.
+The main model is a Temporal Convolutional Network (TCN). The RAG layer uses a local TF-IDF retriever wrapped by LangChain/LangGraph, and the saved demo answers were generated with `gpt-5.4-mini`.
 
 ## Table of Contents
 
@@ -32,17 +32,20 @@ The main model is a compact Temporal Convolutional Network (TCN). The RAG layer 
 
 Forecast target: `inst_heat`
 
-Model: compact Temporal Convolutional Network (TCN)
+Model: Temporal Convolutional Network (TCN)
 
-| split | MAE | RMSE | R2 | MAPE |
-| --- | ---: | ---: | ---: | ---: |
-| train | 747.3132 | 1314.0419 | 0.4452 | 0.2822 |
-| val | 1020.9877 | 1686.0577 | 0.4451 | 0.4282 |
-| test | 1246.0864 | 2043.1516 | 0.4434 | 0.3723 |
+Best historical TCN checkpoint experiment:
+
+| input length | output length | features | best val loss | facility A aggregate rel. error | facility A segment AUC rel. error |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 10 | 10 | 22 | 2261.2222 | 0.0152 | 0.0069 |
+
+The point-wise MAPE in this dataset is unstable because the target can be near zero. For that reason, the project emphasizes energy-area and aggregate-window errors for operational interpretation.
 
 Additional artifacts:
 
 - [Forecast summary](outputs/reports/facility_a_inst_heat_multioutput_summary.md)
+- [Best TCN experiment note](docs/knowledge/best_tcn_experiment_summary.md)
 - [Gas-like RAG context](outputs/reports/facility_a_gas_like_rag_context.md)
 - [Heating-like RAG context](outputs/reports/facility_a_heating_like_rag_context.md)
 - [API answer run summary](outputs/rag/dummy_engineer_api_runs/20260625_150159/summary.md)
@@ -56,11 +59,11 @@ The examples below are shortened from generated LLM answer records. Each answer 
 
 **Question**
 
-> The next 15-step `inst_heat` forecast is lower than expected, but the operating cost estimate is rising. What should I inspect first?
+> The short-horizon `inst_heat` forecast is lower than expected, but the operating cost estimate is rising. What should I inspect first?
 
 **Answer summary**
 
-The model should compare the 15-step forecast sum with the operating-cost estimate before treating low heat as abnormal. In gas-like mode, low or zero `inst_heat` is not automatically anomalous. The first inspection targets are `3way_DHW`, `hotwater_th`, `inv1_input_current`, and compressor current/target frequency trends.
+The model should compare the short-horizon forecast sum with the operating-cost estimate before treating low heat as abnormal. In gas-like mode, low or zero `inst_heat` is not automatically anomalous. The first inspection targets are `3way_DHW`, `hotwater_th`, `inv1_input_current`, and compressor current/target frequency trends.
 
 Full answer: [gas_cost_rise_01_answer.md](outputs/rag/dummy_engineer_api_runs/20260625_150159/gas_cost_rise_01_answer.md)
 
@@ -84,7 +87,7 @@ Full answer: [gas_zero_heat_02_answer.md](outputs/rag/dummy_engineer_api_runs/20
 
 **Answer summary**
 
-For heating-like mode, the answer prioritizes compressor load/current, target frequency, pressure stability, and temperature variation. The incident evidence points to a large 15-step residual and feature shifts around `vi_eev1`, inverter input current, compressor current frequency, and target frequency, so the first field checks focus on EEV/valve behavior and compressor frequency tracking.
+For heating-like mode, the answer prioritizes compressor load/current, target frequency, pressure stability, and temperature variation. The incident evidence points to a large short-horizon residual and feature shifts around `vi_eev1`, inverter input current, compressor current frequency, and target frequency, so the first field checks focus on EEV/valve behavior and compressor frequency tracking.
 
 Full answer: [heat_alarm_code_06_answer.md](outputs/rag/dummy_engineer_api_runs/20260625_150159/heat_alarm_code_06_answer.md)
 
@@ -166,6 +169,8 @@ export PYTHONPATH="$PWD/src:$PYTHONPATH"
 ```
 
 Raw data and trained model binaries are not included. The repository is designed to show the anonymized workflow, public summaries, prompt artifacts, and generated LLM answer examples.
+
+The included TCN training script is a reproducible public demo. The best historical checkpoint metrics reported above come from a private local experiment whose raw data and binary checkpoints are intentionally excluded.
 
 ## Run the LLM Answer Workflow
 

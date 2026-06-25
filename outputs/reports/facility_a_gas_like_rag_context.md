@@ -3,42 +3,34 @@
 - mode_proxy: `opermode`
 - mode_value: `1`
 - interpretation: `gas_like`
-- model_scope: `shared_multioutput_forecast`
-- prediction_window: `short-horizon sequence`
-- representative_horizon: `t+15`
-- residual_threshold: 35040.3720
-- predicted_anomaly_ratio: 0.0502
+- model_scope: `TCN short-horizon energy forecast`
+- metric_focus: `energy-area and aggregate-window error`
 
-## Top episode
+## TCN forecast summary
 
-- time: 2024-04-28 19:08:14 -> 2024-04-28 19:41:32
-- mean actual sum 15: 52742.67
-- mean prediction sum 15: 39505.88
-- mean residual sum 15: 13236.79
+- model: `Temporal Convolutional Network (TCN)`
+- input sequence length: `10`
+- output sequence length: `10`
+- numeric features: `22`
+- best validation loss: `2261.2222`
+- facility A aggregate window relative error: `0.0152`
+- facility A segment AUC relative error: `0.0069`
 
-## Multi-output suite
+## Mode interpretation
 
-| horizon | test_mae | test_rmse | test_r2 | test_mape | mean_abs_residual |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| t+1 | 599.17 | 965.91 | 0.8755 | 0.3223 | 599.17 |
-| t+2 | 526.21 | 919.24 | 0.8873 | 0.2436 | 526.21 |
-| t+3 | 687.49 | 1205.94 | 0.8060 | 0.2802 | 687.49 |
-| t+4 | 783.31 | 1356.87 | 0.7544 | 0.2642 | 783.31 |
-| t+5 | 1243.37 | 1799.50 | 0.5681 | 0.3725 | 1243.37 |
-| t+6 | 1010.64 | 1750.44 | 0.5913 | 0.3064 | 1010.64 |
-| t+7 | 1096.27 | 1875.28 | 0.5310 | 0.3087 | 1096.27 |
-| t+8 | 1356.07 | 2110.52 | 0.4060 | 0.3921 | 1356.07 |
-| t+9 | 1524.28 | 2412.43 | 0.2240 | 0.4377 | 1524.28 |
-| t+10 | 1417.12 | 2238.81 | 0.3317 | 0.4202 | 1417.12 |
-| t+11 | 1653.60 | 2611.62 | 0.0906 | 0.4418 | 1653.60 |
-| t+12 | 1614.07 | 2403.29 | 0.2300 | 0.4304 | 1614.07 |
-| t+13 | 1807.51 | 2669.33 | 0.0501 | 0.4884 | 1807.51 |
-| t+14 | 1685.53 | 2517.12 | 0.1554 | 0.4374 | 1685.53 |
-| t+15 | 1686.66 | 2526.02 | 0.1495 | 0.4396 | 1686.66 |
+- Gas-like mode can legitimately show low or near-zero `inst_heat`.
+- A low heat signal should not be treated as abnormal until mode state, residual size, and load-related features are checked.
+- Cost questions should compare the predicted energy-area estimate against assumed gas and electric rates.
+
+## Recommended retrieval cues
+
+- Use `facility_a_mode_transition_playbook` for mode-aware threshold interpretation.
+- Use `facility_a_valve_and_hotwater_control` for low heat with hot water or valve routing changes.
+- Use `facility_a_compressor_diagnostics` when low heat appears together with elevated current or compressor frequency movement.
+- Use `facility_a_cost_comparison_guide` when the question asks about operating cost.
 
 ## Notes
 
-- The forecasting model predicts the next 15 inst_heat values in one shot.
-- Use opermode as the first gas/electric proxy when interpreting residuals.
-- A zero inst_heat value is not automatically abnormal in gas-like mode.
-- Residual thresholds are mode-aware and should be compared separately by operating mode.
+- Point-wise MAPE is not the primary metric because near-zero targets can dominate percentage error.
+- The public repository excludes raw data, preprocessing state, and private checkpoint binaries.
+- This context is designed for retrieval-grounded demo answers, not production maintenance decisions.
