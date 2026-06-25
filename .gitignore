@@ -1,0 +1,28 @@
+# Secrets
+gpt_api_key.txt
+.env
+.env.*
+
+# Data and generated binaries
+data/
+outputs/models/
+*.joblib
+*.pkl
+*.npz
+
+# Large/generated outputs kept out by default
+outputs/rag/*_tfidf_index/
+outputs/rag/*.jsonl
+outputs/reports/*.csv
+outputs/reports/*.json
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Notebooks and local files
+.ipynb_checkpoints/
+.DS_Store
