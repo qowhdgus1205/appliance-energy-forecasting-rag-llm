@@ -17,6 +17,7 @@ This project is a portfolio demo, but the workflow still has important limitatio
 - Manuals are synthetic and designed to test retrieval-grounded answering.
 - The retrieval evaluation is a small manual review, not a full benchmark.
 - TF-IDF retrieval is transparent and lightweight, but it may miss paraphrases that an embedding retriever would catch.
+- The optional OpenAI embedding retriever improves semantic matching, but it introduces API cost, external model dependency, and an embedding index that must be rebuilt when the corpus changes.
 - The answer should provide inspection priority, not definitive root cause.
 
 ## LLM Limitations
@@ -34,7 +35,7 @@ This project is a portfolio demo, but the workflow still has important limitatio
 ## Recommended Next Improvements
 
 1. Add a small Streamlit or FastAPI demo.
-2. Add retrieval top-k and chunk-size evaluation.
+2. Add TF-IDF vs embedding retrieval top-k and chunk-size evaluation.
 3. Add an answer-quality rubric with groundedness, usefulness, and uncertainty scoring.
 4. Add negative-control questions where the correct answer is "insufficient evidence."
 5. Add a clean public sample dataset or synthetic data generator so the full pipeline can run end to end.

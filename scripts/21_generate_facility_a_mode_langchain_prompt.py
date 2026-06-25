@@ -11,8 +11,8 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from power_forecast_rag.mode_langchain_rag import (
     MODE_RAG_PROMPT,
-    ModeAwareLGRetriever,
     build_query,
+    build_mode_retriever,
     format_documents_for_prompt,
     format_incident_evidence,
 )
@@ -26,16 +26,19 @@ def load_json(path: Path):
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate a LangChain prompt for Industrial Energy mode-aware context.")
     parser.add_argument("--rag-context", required=True, help="Mode-specific RAG context JSON.")
-    parser.add_argument("--index-dir", default="outputs/rag/facility_a_mode_tfidf_index", help="TF-IDF index directory.")
+    parser.add_argument("--retriever", choices=["tfidf", "embedding"], default="tfidf")
+    parser.add_argument("--index-dir", help="Index directory. Defaults to the selected retriever's standard output path.")
     parser.add_argument("--question", default="What should I inspect when the next 15-step inst_heat forecast drops below expected?")
     parser.add_argument("--language", default="Korean")
     parser.add_argument("--top-k", type=int, default=4)
     args = parser.parse_args()
 
     context_path = ROOT / args.rag_context if not Path(args.rag_context).is_absolute() else Path(args.rag_context)
-    index_dir = ROOT / args.index_dir if not Path(args.index_dir).is_absolute() else Path(args.index_dir)
+    default_index = f"outputs/rag/facility_a_mode_{args.retriever}_index"
+    index_arg = args.index_dir or default_index
+    index_dir = ROOT / index_arg if not Path(index_arg).is_absolute() else Path(index_arg)
     context = load_json(context_path)
-    retriever = ModeAwareLGRetriever(index_dir=str(index_dir), top_k=args.top_k)
+    retriever = build_mode_retriever(args.retriever, str(index_dir), top_k=args.top_k)
     query = build_query(context, args.question)
     docs = retriever.invoke(query)
     prompt = MODE_RAG_PROMPT.format(

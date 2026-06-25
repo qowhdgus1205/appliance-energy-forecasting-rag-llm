@@ -11,7 +11,9 @@ outputs/models/
 
 # Large/generated outputs kept out by default
 outputs/rag/*_tfidf_index/
+outputs/rag/*_embedding_index/
 outputs/rag/*.jsonl
+*.npy
 outputs/reports/*.csv
 outputs/reports/*.json
 

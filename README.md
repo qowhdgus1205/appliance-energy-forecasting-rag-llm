@@ -27,6 +27,7 @@ The main model is a Temporal Convolutional Network (TCN). The RAG layer uses a l
 - [Repository Layout](#repository-layout)
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [Build a Semantic RAG Index](#build-a-semantic-rag-index)
 - [Run the LLM Answer Workflow](#run-the-llm-answer-workflow)
 - [Notes](#notes)
 
@@ -73,6 +74,8 @@ The retrieval corpus is intentionally small enough to inspect, but broad enough 
 | Sensor reference | sensor signal reference | feature-level explanations for retrieved evidence |
 | Alarm and cost guides | alarm triage matrix, cost comparison guide, alarm code guide | alarm-like patterns and operating-cost questions |
 | Forecast context | gas-like and heating-like RAG summaries | model evidence connected to operational language |
+
+The saved public answer examples use a local TF-IDF retriever for transparent, reproducible keyword search. If an OpenAI API key is available, the same corpus can also be indexed with OpenAI embeddings for semantic retrieval.
 
 ## Example Questions and Answers
 
@@ -144,9 +147,11 @@ scripts/
   24_generate_dummy_engineer_prompt_suite.py
   25_train_facility_a_inst_heat_tcn.py
   26_run_dummy_engineer_openai_api.py
+  27_build_facility_a_mode_embedding_index.py
+  28_query_facility_a_mode_embedding_rag.py
 
 src/power_forecast_rag/
-  rag.py                    TF-IDF index loading and search helpers
+  rag.py                    TF-IDF and OpenAI embedding search helpers
   mode_langchain_rag.py     LangChain retriever and prompt formatting
   mode_langgraph_workflow.py
 ```
@@ -202,6 +207,25 @@ export PYTHONPATH="$PWD/src:$PYTHONPATH"
 Raw data and trained model binaries are not included. The repository is designed to show the anonymized workflow, public summaries, prompt artifacts, and generated LLM answer examples.
 
 The included TCN training script is a reproducible public demo. The best historical checkpoint metrics reported above come from a private local experiment whose raw data and binary checkpoints are intentionally excluded.
+
+## Build a Semantic RAG Index
+
+The saved answer examples use the transparent local TF-IDF retriever. With an OpenAI API key, you can build a semantic retrieval index over the same RAG corpus:
+
+```bash
+export OPENAI_API_KEY="your-openai-api-key"
+python scripts/19_build_facility_a_mode_rag_corpus.py
+python scripts/27_build_facility_a_mode_embedding_index.py
+```
+
+Query the semantic index:
+
+```bash
+python scripts/28_query_facility_a_mode_embedding_rag.py \
+  --query "heating mode forecast is drifting and alarm patterns repeat"
+```
+
+By default this uses `text-embedding-3-small`. Set `OPENAI_EMBEDDING_MODEL` or pass `--model` to use another embedding model. The generated embedding index is stored under `outputs/rag/facility_a_mode_embedding_index/` and excluded from Git.
 
 ## Run the LLM Answer Workflow
 

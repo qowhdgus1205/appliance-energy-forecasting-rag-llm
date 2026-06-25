@@ -8,7 +8,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.retrievers import BaseRetriever
 from pydantic import ConfigDict, PrivateAttr
 
-from power_forecast_rag.rag import load_tfidf_index, search_tfidf
+from power_forecast_rag.rag import load_embedding_index, load_tfidf_index, search_embedding, search_tfidf
 
 
 class ModeAwareLGRetriever(BaseRetriever):
@@ -35,6 +35,38 @@ class ModeAwareLGRetriever(BaseRetriever):
             metadata = {k: v for k, v in result.items() if k != "text"}
             docs.append(Document(page_content=result["text"], metadata=metadata))
         return docs
+
+
+class OpenAIEmbeddingModeRetriever(BaseRetriever):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    index_dir: str
+    top_k: int = 4
+    _matrix: Any = PrivateAttr()
+    _metadata: list[dict[str, Any]] = PrivateAttr()
+    _config: dict[str, Any] = PrivateAttr()
+
+    def model_post_init(self, __context: Any) -> None:
+        matrix, metadata, config = load_embedding_index(Path(self.index_dir))
+        self._matrix = matrix
+        self._metadata = metadata
+        self._config = config
+
+    def _get_relevant_documents(self, query: str, *, run_manager: Any = None) -> list[Document]:
+        results = search_embedding(query, self._matrix, self._metadata, self._config, top_k=self.top_k)
+        docs = []
+        for result in results:
+            metadata = {k: v for k, v in result.items() if k != "text"}
+            docs.append(Document(page_content=result["text"], metadata=metadata))
+        return docs
+
+
+def build_mode_retriever(retriever: str, index_dir: str, top_k: int = 4) -> BaseRetriever:
+    if retriever == "tfidf":
+        return ModeAwareLGRetriever(index_dir=index_dir, top_k=top_k)
+    if retriever == "embedding":
+        return OpenAIEmbeddingModeRetriever(index_dir=index_dir, top_k=top_k)
+    raise ValueError(f"Unsupported retriever: {retriever}")
 
 
 MODE_RAG_PROMPT = PromptTemplate.from_template(

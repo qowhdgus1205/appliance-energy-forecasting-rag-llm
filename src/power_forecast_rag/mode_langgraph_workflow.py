@@ -9,7 +9,7 @@ from langgraph.graph import END, START, StateGraph
 
 from power_forecast_rag.mode_langchain_rag import (
     MODE_RAG_PROMPT,
-    ModeAwareLGRetriever,
+    build_mode_retriever,
     build_query,
     format_documents_for_prompt,
     format_incident_evidence,
@@ -23,6 +23,8 @@ class LGModeState(TypedDict, total=False):
     question: str
     top_k: int
     language: str
+    retriever: str
+    index_dir: str
     context: dict[str, Any]
     retrieval_query: str
     retrieved_docs: list[Document]
@@ -46,8 +48,12 @@ def build_query_node(state: LGModeState) -> LGModeState:
 
 
 def retrieve_context_node(state: LGModeState) -> LGModeState:
-    index_dir = PROJECT_ROOT / "outputs" / "rag" / "facility_a_mode_tfidf_index"
-    retriever = ModeAwareLGRetriever(index_dir=str(index_dir), top_k=state.get("top_k", 4))
+    retriever_name = state.get("retriever", "tfidf")
+    default_index = f"outputs/rag/facility_a_mode_{retriever_name}_index"
+    index_dir = Path(state.get("index_dir", default_index))
+    if not index_dir.is_absolute():
+        index_dir = PROJECT_ROOT / index_dir
+    retriever = build_mode_retriever(retriever_name, str(index_dir), top_k=state.get("top_k", 4))
     docs = retriever.invoke(state["retrieval_query"])
     return {"retrieved_docs": docs, "retrieved_context": format_documents_for_prompt(docs)}
 
@@ -75,4 +81,3 @@ def build_lg_mode_graph():
     graph.add_edge("retrieve_context", "build_prompt")
     graph.add_edge("build_prompt", END)
     return graph.compile()
-

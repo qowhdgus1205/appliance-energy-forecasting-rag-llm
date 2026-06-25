@@ -42,6 +42,8 @@ def main() -> None:
     )
     parser.add_argument("--top-k", type=int, default=4)
     parser.add_argument("--language", default="Korean")
+    parser.add_argument("--retriever", choices=["tfidf", "embedding"], default="tfidf")
+    parser.add_argument("--index-dir", help="Index directory. Defaults to the selected retriever's standard output path.")
     args = parser.parse_args()
 
     question_path = ROOT / args.questions if not Path(args.questions).is_absolute() else Path(args.questions)
@@ -61,6 +63,8 @@ def main() -> None:
                 "question": spec.question,
                 "top_k": args.top_k,
                 "language": args.language,
+                "retriever": args.retriever,
+                "index_dir": args.index_dir or f"outputs/rag/facility_a_mode_{args.retriever}_index",
             }
         )
 
@@ -76,6 +80,7 @@ def main() -> None:
                     "mode": spec.mode,
                     "rag_context_path": str(rag_context_path),
                     "question": spec.question,
+                    "retriever": args.retriever,
                     "retrieval_query": result["retrieval_query"],
                     "retrieved_chunks": [doc.metadata for doc in result["retrieved_docs"]],
                 },
@@ -105,6 +110,7 @@ def main() -> None:
         "# Dummy Engineer Prompt Suite",
         "",
         f"- question_set: {question_path}",
+        f"- retriever: {args.retriever}",
         f"- total: {len(manifest_rows)}",
         "",
     ]

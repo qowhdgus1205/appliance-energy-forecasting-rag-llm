@@ -18,6 +18,8 @@ The project is not trying to prove that the LLM knows the true root cause. The g
 - answer model used for saved examples: `gpt-5.4-mini`
 - evaluation type: manual review of representative engineer questions
 
+The repository also includes an optional OpenAI embedding retriever. The saved public answer run is still evaluated against the TF-IDF retriever so the baseline is transparent and reproducible without API calls. The embedding retriever is intended for semantic retrieval experiments, especially paraphrased engineer questions that do not share exact terms with the manuals.
+
 ## Retrieval Test Set
 
 | question id | mode | expected evidence group | retrieved/answer evidence | result |
@@ -54,4 +56,4 @@ The prompt asks the LLM to:
 - This is a small manual review, not a large automated RAG benchmark.
 - The manuals are synthetic, so retrieval success measures pipeline behavior rather than production maintenance coverage.
 - The public repository excludes the private raw data and checkpoint state used in the historical best model run.
-- Future work should add answer grading with a rubric, retrieval top-k sweeps, and negative-control questions that should return "insufficient evidence."
+- Future work should compare TF-IDF vs OpenAI embedding retrieval, add retrieval top-k sweeps, and include negative-control questions that should return "insufficient evidence."

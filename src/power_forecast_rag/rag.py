@@ -3,10 +3,12 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 from joblib import dump, load
+from openai import OpenAI
 from scipy import sparse
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -135,6 +137,98 @@ def search_tfidf(query: str, vectorizer, matrix, metadata, top_k: int = 5) -> li
     for idx in top_idx:
         item = dict(metadata[int(idx)])
         item["score"] = float(scores[int(idx)])
+        results.append(item)
+    return results
+
+
+def _normalize_rows(matrix: np.ndarray) -> np.ndarray:
+    norms = np.linalg.norm(matrix, axis=1, keepdims=True)
+    return np.divide(matrix, norms, out=np.zeros_like(matrix, dtype=np.float32), where=norms != 0)
+
+
+def embed_texts(
+    texts: list[str],
+    model: str = "text-embedding-3-small",
+    batch_size: int = 64,
+    dimensions: int | None = None,
+    client: OpenAI | None = None,
+) -> np.ndarray:
+    if not texts:
+        return np.empty((0, 0), dtype=np.float32)
+
+    client = client or OpenAI()
+    vectors: list[list[float]] = []
+    for start in range(0, len(texts), batch_size):
+        batch = texts[start : start + batch_size]
+        kwargs: dict[str, Any] = {"model": model, "input": batch, "encoding_format": "float"}
+        if dimensions is not None:
+            kwargs["dimensions"] = dimensions
+        response = client.embeddings.create(**kwargs)
+        vectors.extend(item.embedding for item in response.data)
+    return np.asarray(vectors, dtype=np.float32)
+
+
+def build_embedding_index(
+    chunks: list[dict[str, object]],
+    output_dir: Path,
+    model: str = "text-embedding-3-small",
+    batch_size: int = 64,
+    dimensions: int | None = None,
+) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    texts = [str(chunk["text"]) for chunk in chunks]
+    embeddings = embed_texts(texts, model=model, batch_size=batch_size, dimensions=dimensions)
+    embeddings = _normalize_rows(embeddings)
+    np.save(output_dir / "embedding_matrix.npy", embeddings)
+    write_jsonl(chunks, output_dir / "embedding_metadata.jsonl")
+    (output_dir / "index_config.json").write_text(
+        json.dumps(
+            {
+                "retriever": "openai_embedding",
+                "embedding_model": model,
+                "dimensions": int(embeddings.shape[1]) if embeddings.size else dimensions,
+                "requested_dimensions": dimensions,
+                "matrix_file": "embedding_matrix.npy",
+                "metadata_file": "embedding_metadata.jsonl",
+                "similarity": "cosine",
+                "documents": len(chunks),
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+def load_embedding_index(index_dir: Path):
+    config = json.loads((index_dir / "index_config.json").read_text(encoding="utf-8"))
+    matrix = np.load(index_dir / config["matrix_file"])
+    metadata = read_jsonl(index_dir / config["metadata_file"])
+    return matrix, metadata, config
+
+
+def search_embedding(
+    query: str,
+    matrix: np.ndarray,
+    metadata: list[dict[str, object]],
+    config: dict[str, object],
+    top_k: int = 5,
+    client: OpenAI | None = None,
+) -> list[dict[str, object]]:
+    query_embedding = embed_texts(
+        [query],
+        model=str(config["embedding_model"]),
+        dimensions=config.get("requested_dimensions") if config.get("requested_dimensions") else None,
+        client=client,
+    )
+    query_embedding = _normalize_rows(query_embedding)
+    scores = matrix @ query_embedding[0]
+    top_idx = np.argsort(scores)[::-1][:top_k]
+    results = []
+    for idx in top_idx:
+        item = dict(metadata[int(idx)])
+        item["score"] = float(scores[int(idx)])
+        item["retriever"] = "openai_embedding"
         results.append(item)
     return results
 
