@@ -36,9 +36,9 @@ Model: Temporal Convolutional Network (TCN)
 
 Best historical TCN checkpoint experiment:
 
-| input length | output length | features | best val loss | facility A aggregate rel. error | facility A segment AUC rel. error |
-| ---: | ---: | ---: | ---: | ---: | ---: |
-| 10 | 10 | 22 | 2261.2222 | 0.0152 | 0.0069 |
+| model | input length | output length | features | energy-area rel. error |
+| --- | ---: | ---: | ---: | ---: |
+| TCN | 10 | 10 | 22 | 0.0069 |
 
 The point-wise MAPE in this dataset is unstable because the target can be near zero. For that reason, the project emphasizes energy-area and aggregate-window errors for operational interpretation.
 
@@ -183,7 +183,7 @@ The included TCN training script is a reproducible public demo. The best histori
 Set an OpenAI API key through the environment:
 
 ```bash
-export OPENAI_API_KEY="sk-..."
+export OPENAI_API_KEY="your-openai-api-key"
 ```
 
 Run all prepared engineer questions:

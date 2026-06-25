@@ -4,7 +4,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -17,7 +16,6 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFEST = ROOT / "outputs" / "rag" / "dummy_engineer_runs" / "manifest.json"
 DEFAULT_OUT_DIR = ROOT / "outputs" / "rag" / "dummy_engineer_api_runs"
 DEFAULT_MODEL = "gpt-5.4-mini"
-DEFAULT_API_KEY_FILE = ROOT / "gpt_api_key.txt"
 
 
 def read_json(path: Path) -> Any:
@@ -61,17 +59,6 @@ def load_manifest(path: Path, question_ids: set[str] | None) -> list[dict[str, A
     return selected
 
 
-def load_api_key(path: Path) -> str:
-    env_key = os.getenv("OPENAI_API_KEY", "").strip()
-    if env_key:
-        return env_key
-    if path.exists():
-        raw = path.read_text(encoding="utf-8").strip()
-        match = re.search(r"sk-[A-Za-z0-9_-]+", raw)
-        return match.group(0) if match else raw
-    return ""
-
-
 def run_one(client: OpenAI, model: str, prompt: str, max_output_tokens: int) -> Any:
     return client.responses.create(
         model=model,
@@ -95,18 +82,14 @@ def main() -> None:
         default=os.getenv("OPENAI_MODEL", DEFAULT_MODEL),
         help="OpenAI model. Defaults to OPENAI_MODEL or gpt-5.4-mini.",
     )
-    parser.add_argument("--api-key-file", default=str(DEFAULT_API_KEY_FILE), help="Fallback API key file.")
     parser.add_argument("--question-id", action="append", help="Run only this question_id. Repeatable.")
     parser.add_argument("--max-output-tokens", type=int, default=900)
     parser.add_argument("--run-label", help="Optional stable run directory name.")
     args = parser.parse_args()
 
-    api_key_path = Path(args.api_key_file)
-    if not api_key_path.is_absolute():
-        api_key_path = ROOT / api_key_path
-    api_key = load_api_key(api_key_path)
+    api_key = os.getenv("OPENAI_API_KEY", "").strip()
     if not api_key:
-        raise SystemExit("OPENAI_API_KEY is not set and no API key file was found.")
+        raise SystemExit("OPENAI_API_KEY is not set. Export it before running this script.")
 
     manifest_path = Path(args.manifest)
     if not manifest_path.is_absolute():
