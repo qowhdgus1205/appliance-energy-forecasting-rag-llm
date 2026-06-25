@@ -121,6 +121,7 @@ Full answer: [heat_alarm_code_06_answer.md](outputs/rag/dummy_engineer_api_runs/
 
 These documents are useful for interview discussion and design review:
 
+- [Project step-by-step walkthrough](docs/project_step_by_step.md)
 - [Modeling decisions](docs/modeling_decisions.md)
 - [Retrieval evaluation](docs/retrieval_eval.md)
 - [Failure analysis](docs/failure_analysis.md)
